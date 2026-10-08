@@ -1,28 +1,39 @@
-﻿import { classifyUrl, type Access } from './core';
-import { LimitOverlay } from './components/limit-overlay';
+﻿import { classifyUrl, type Access } from "./core";
+import { LimitOverlay } from "./components/limit-overlay";
 
 declare const chrome: any;
 
-type Reply = { ok: boolean; result?: { access: Access | null }; error?: string };
+type Reply = {
+  ok: boolean;
+  result?: { access: Access | null };
+  error?: string;
+};
 
-type PingListener = (incoming: { type?: string }, sender: unknown, sendResponse: (reply: { ok: boolean }) => void) => void;
+type PingListener = (
+  incoming: { type?: string },
+  sender: unknown,
+  sendResponse: (reply: { ok: boolean }) => void,
+) => void;
 const contentScope = globalThis as typeof globalThis & { __scrolllessPingListener?: PingListener };
 const priorListener = contentScope.__scrolllessPingListener;
 if (!priorListener || !chrome.runtime.onMessage.hasListener(priorListener)) {
-
   const overlay = new LimitOverlay();
-  let lastUrl = '';
+  let lastUrl = "";
   let inFlight = false;
   let wasVisible = false;
-  let previousReason = '';
+  let previousReason = "";
 
-  console.info('[ScrollLess content] loaded', location.href);
+  console.info("[ScrollLess content] loaded", location.href);
 
-  document.addEventListener('keydown', (event) => {
-    if (!overlay.isVisible) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  }, true);
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (!overlay.isVisible) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },
+    true,
+  );
 
   async function tick() {
     if (inFlight) return;
@@ -30,25 +41,39 @@ if (!priorListener || !chrome.runtime.onMessage.hasListener(priorListener)) {
     const platform = classifyUrl(url);
     if (!platform) {
       overlay.clear();
-      if (lastUrl) void chrome.runtime.sendMessage({ type: 'leave' }).catch(() => undefined);
-      lastUrl = '';
+      if (lastUrl) {
+        void chrome.runtime.sendMessage({ type: "leave" }).catch(() => undefined);
+      }
+      lastUrl = "";
       wasVisible = false;
       return;
     }
     lastUrl = url;
-    const visible = document.visibilityState === 'visible';
+    const visible = document.visibilityState === "visible";
     if (!visible && !wasVisible) return;
     wasVisible = visible;
     inFlight = true;
+
     try {
-      const reply: Reply = await chrome.runtime.sendMessage({ type: 'heartbeat', url, visible, pageFocused: document.hasFocus() });
-      const reason = reply.result?.access?.reason ?? (reply.ok ? 'allowed' : 'error');
+      const reply: Reply = await chrome.runtime.sendMessage({
+        type: "heartbeat",
+        url,
+        visible,
+        pageFocused: document.hasFocus(),
+      });
+
+      const reason = reply.result?.access?.reason ?? (reply.ok ? "allowed" : "error");
+
       if (reason !== previousReason) {
-        console.info('[ScrollLess content] status', { url, visible, reason, reply });
+        console.info("[ScrollLess content] status", { url, visible, reason, reply });
         previousReason = reason;
       }
-      if (reply.ok && reply.result?.access?.blocked) overlay.show(reply.result.access, platform);
-      else overlay.clear();
+
+      if (reply.ok && reply.result?.access?.blocked) {
+        overlay.show(reply.result.access, platform);
+      } else {
+        overlay.clear();
+      }
     } catch {
       overlay.clear();
     } finally {
@@ -58,11 +83,11 @@ if (!priorListener || !chrome.runtime.onMessage.hasListener(priorListener)) {
 
   void tick();
   setInterval(() => void tick(), 1_000);
-  document.addEventListener('visibilitychange', () => void tick());
-  window.addEventListener('pageshow', () => void tick());
-  window.addEventListener('popstate', () => void tick());
+  document.addEventListener("visibilitychange", () => void tick());
+  window.addEventListener("pageshow", () => void tick());
+  window.addEventListener("popstate", () => void tick());
   const pingListener: PingListener = (incoming, _sender, sendResponse) => {
-    if (incoming.type === 'scrollless-ping') sendResponse({ ok: true });
+    if (incoming.type === "scrollless-ping") sendResponse({ ok: true });
   };
   chrome.runtime.onMessage.addListener(pingListener);
   contentScope.__scrolllessPingListener = pingListener;

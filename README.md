@@ -14,22 +14,22 @@ Built with Lit, TypeScript, Vite, and Manifest V3.
 
 ### Supported pages
 
-| Platform | Pages that count toward the limit |
-| --- | --- |
-| YouTube | Shorts pages under `youtube.com/shorts/` |
-| Instagram | Reel and Reels pages under `instagram.com/reel/` and `instagram.com/reels/` |
-| TikTok | All pages on `tiktok.com`, `www.tiktok.com`, and `m.tiktok.com`, including the feed, profiles, and search |
-| Facebook | Reel and Reels pages under `facebook.com/reel/` and `facebook.com/reels/` |
+| Platform  | Pages that count toward the limit                                                                         |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| YouTube   | Shorts pages under `youtube.com/shorts/`                                                                  |
+| Instagram | Reel and Reels pages under `instagram.com/reel/` and `instagram.com/reels/`                               |
+| TikTok    | All pages on `tiktok.com`, `www.tiktok.com`, and `m.tiktok.com`, including the feed, profiles, and search |
+| Facebook  | Reel and Reels pages under `facebook.com/reel/` and `facebook.com/reels/`                                 |
 
 Other pages on YouTube, Instagram, and Facebook do not count. You can disable any supported platform in the popup.
 
 ### Limit modes
 
-| Mode | Behavior |
-| --- | --- |
-| **Normal** | One daily time limit shared by all enabled platforms. When it runs out, those pages stay blocked until local midnight. |
+| Mode         | Behavior                                                                                                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Normal**   | One daily time limit shared by all enabled platforms. When it runs out, those pages stay blocked until local midnight.                                                                 |
 | **Cooldown** | One shared watch period followed by a timed break. For example, watch for 15 minutes, then wait 30 minutes before the next cycle. The break continues even when the browser is closed. |
-| **Custom** | A separate daily limit for each enabled platform. Reaching one platform's limit does not block the others. Limits reset at local midnight. |
+| **Custom**   | A separate daily limit for each enabled platform. Reaching one platform's limit does not block the others. Limits reset at local midnight.                                             |
 
 ScrollLess measures elapsed time, not scroll events. Time counts while a supported page is the active tab and the browser is in front. It also continues counting if you open the ScrollLess popup over that active page. Switching tabs or moving to another application pauses tracking.
 

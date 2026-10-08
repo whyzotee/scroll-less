@@ -3,11 +3,7 @@
   "name": "ScrollLess",
   "version": "0.1.0",
   "description": "Limit short-form video time across social platforms.",
-  "permissions": [
-    "storage",
-    "scripting",
-    "activeTab"
-  ],
+  "permissions": ["storage", "scripting", "activeTab"],
   "host_permissions": [
     "https://*.youtube.com/*",
     "https://*.instagram.com/*",
@@ -26,9 +22,7 @@
         "https://*.tiktok.com/*",
         "https://*.facebook.com/*"
       ],
-      "js": [
-        "content.js"
-      ],
+      "js": ["content.js"],
       "run_at": "document_idle"
     }
   ],

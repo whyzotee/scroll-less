@@ -6,19 +6,19 @@ ScrollLess is a Manifest V3 extension for Chrome and Edge. It limits time spent 
 
 ## Repository map
 
-| Path | Responsibility |
-| --- | --- |
-| `src/core.ts` | Platform URL matching, settings and usage types, defaults, local-day rollover, and limit calculations. Keep this logic independent of Chrome APIs. |
-| `src/background.ts` | Authoritative time tracking, `chrome.storage.local`, message handling, tab activation after install/startup, and debug logs. |
-| `src/content.ts` | One-second heartbeat on supported pages, navigation/visibility checks, and overlay lifecycle. |
-| `src/popup.ts` | Lit popup controller, current-tab activation, snapshots, settings save, and one-second status refresh. |
-| `src/components/` | Popup sections and styles, time formatting, and the blocking overlay. |
-| `public/manifest.json` | Extension permissions, URL matches, popup, service worker, content script, and web-accessible GIFs. |
-| `public/icons/*.webp` | Platform icons in the popup. |
-| `public/gif/*.gif` | GIFs chosen at random on the blocking screen. |
-| `vite.config.ts` | Three Vite build modes and generation of `gif/index.json`. |
-| `tests/` | Core behavior and background/content regression tests. |
-| `cliff.toml`, `CHANGELOG.md` | git-cliff configuration and release history. |
+| Path                         | Responsibility                                                                                                                                     |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/core.ts`                | Platform URL matching, settings and usage types, defaults, local-day rollover, and limit calculations. Keep this logic independent of Chrome APIs. |
+| `src/background.ts`          | Authoritative time tracking, `chrome.storage.local`, message handling, tab activation after install/startup, and debug logs.                       |
+| `src/content.ts`             | One-second heartbeat on supported pages, navigation/visibility checks, and overlay lifecycle.                                                      |
+| `src/popup.ts`               | Lit popup controller, current-tab activation, snapshots, settings save, and one-second status refresh.                                             |
+| `src/components/`            | Popup sections and styles, time formatting, and the blocking overlay.                                                                              |
+| `public/manifest.json`       | Extension permissions, URL matches, popup, service worker, content script, and web-accessible GIFs.                                                |
+| `public/icons/*.webp`        | Platform icons in the popup.                                                                                                                       |
+| `public/gif/*.gif`           | GIFs chosen at random on the blocking screen.                                                                                                      |
+| `vite.config.ts`             | Three Vite build modes and generation of `gif/index.json`.                                                                                         |
+| `tests/`                     | Core behavior and background/content regression tests.                                                                                             |
+| `cliff.toml`, `CHANGELOG.md` | git-cliff configuration and release history.                                                                                                       |
 
 ## Product behavior to preserve
 

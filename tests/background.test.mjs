@@ -1,7 +1,7 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import assert from "node:assert/strict";
+import test from "node:test";
 
-test('TikTok time decreases while the extension popup is open and the page is hidden', async () => {
+test("TikTok time decreases while the extension popup is open and the page is hidden", async () => {
   let listener;
   let onInstalled;
   let onStartup;
@@ -14,57 +14,79 @@ test('TikTok time decreases while the extension popup is open and the page is hi
   Date.now = () => now;
   console.info = () => undefined;
   globalThis.chrome = {
-    storage: { local: { get: async () => ({ ...values }), set: async (items) => Object.assign(values, items) } },
+    storage: {
+      local: {
+        get: async () => ({ ...values }),
+        set: async (items) => Object.assign(values, items),
+      },
+    },
     windows: { get: async () => ({ focused: false }) },
     tabs: {
-      get: async (id) => ({ id, windowId: 2, active: true, url: 'https://www.tiktok.com/th-TH/' }),
+      get: async (id) => ({ id, windowId: 2, active: true, url: "https://www.tiktok.com/th-TH/" }),
       query: async () => [
-        { id: 7, url: 'https://www.tiktok.com/th-TH/' },
-        { id: 8, url: 'https://www.youtube.com/shorts/abc' },
-        { id: 9, url: 'https://www.youtube.com/watch?v=abc' },
-        { id: 10, url: 'chrome://extensions' },
+        { id: 7, url: "https://www.tiktok.com/th-TH/" },
+        { id: 8, url: "https://www.youtube.com/shorts/abc" },
+        { id: 9, url: "https://www.youtube.com/watch?v=abc" },
+        { id: 10, url: "chrome://extensions" },
       ],
     },
-    scripting: { executeScript: async (options) => { injected.push(options); } },
+    scripting: {
+      executeScript: async (options) => {
+        injected.push(options);
+      },
+    },
     runtime: {
-      onMessage: { addListener: (callback) => { listener = callback; } },
-      onInstalled: { addListener: (callback) => { onInstalled = callback; } },
-      onStartup: { addListener: (callback) => { onStartup = callback; } },
+      onMessage: {
+        addListener: (callback) => {
+          listener = callback;
+        },
+      },
+      onInstalled: {
+        addListener: (callback) => {
+          onInstalled = callback;
+        },
+      },
+      onStartup: {
+        addListener: (callback) => {
+          onStartup = callback;
+        },
+      },
     },
   };
 
   try {
-    await import('../dist/background.js');
-    onInstalled({ reason: 'update' });
+    await import("../dist/background.js");
+    onInstalled({ reason: "update" });
     await new Promise(setImmediate);
     assert.deepEqual(injected.map(({ target }) => target.tabId).sort(), [7, 8]);
-    assert.ok(injected.every(({ files }) => files.length === 1 && files[0] === 'content.js'));
+    assert.ok(injected.every(({ files }) => files.length === 1 && files[0] === "content.js"));
     onStartup();
     await new Promise(setImmediate);
     assert.equal(injected.length, 4);
-    const send = (message, sender = {}) => new Promise((resolve) => listener(message, sender, resolve));
-    const viewing = { tabId: 7, windowId: 2, url: 'https://www.tiktok.com/th-TH/' };
-    await send({ type: 'snapshot', viewing });
+    const send = (message, sender = {}) =>
+      new Promise((resolve) => listener(message, sender, resolve));
+    const viewing = { tabId: 7, windowId: 2, url: "https://www.tiktok.com/th-TH/" };
+    await send({ type: "snapshot", viewing });
     now += 1_000;
-    let reply = await send({ type: 'snapshot', viewing });
+    let reply = await send({ type: "snapshot", viewing });
     assert.equal(reply.result.state.totalMs, 1_000);
-    assert.equal(reply.result.state.lastCheck.reason, 'counting');
+    assert.equal(reply.result.state.lastCheck.reason, "counting");
 
     reply = await send(
-      { type: 'heartbeat', url: viewing.url, visible: false, pageFocused: false },
+      { type: "heartbeat", url: viewing.url, visible: false, pageFocused: false },
       { tab: { id: 7, windowId: 2, active: true } },
     );
-    assert.equal(reply.result.state.lastCheck.reason, 'counting');
+    assert.equal(reply.result.state.lastCheck.reason, "counting");
     now += 1_000;
-    reply = await send({ type: 'snapshot', viewing });
+    reply = await send({ type: "snapshot", viewing });
     assert.equal(reply.result.state.totalMs, 2_000);
 
     now += 3_000;
     reply = await send(
-      { type: 'heartbeat', url: viewing.url, visible: false, pageFocused: false },
+      { type: "heartbeat", url: viewing.url, visible: false, pageFocused: false },
       { tab: { id: 7, windowId: 2, active: true } },
     );
-    assert.equal(reply.result.state.lastCheck.reason, 'page-hidden');
+    assert.equal(reply.result.state.lastCheck.reason, "page-hidden");
     assert.equal(reply.result.state.totalMs, 2_000);
   } finally {
     Date.now = originalNow;

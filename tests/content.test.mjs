@@ -1,13 +1,18 @@
-import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import test from 'node:test';
-import { runInNewContext } from 'node:vm';
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import { runInNewContext } from "node:vm";
 
-test('content script starts once per live extension context and restarts after reload', () => {
-  const script = readFileSync('dist/content.js', 'utf8');
+test("content script starts once per live extension context and restarts after reload", () => {
+  const script = readFileSync("dist/content.js", "utf8");
   const listeners = new Set();
   const intervals = [];
-  let staleOverlay = { dataset: { previousBodyInert: 'false' }, remove() { staleOverlay = null; } };
+  let staleOverlay = {
+    dataset: { previousBodyInert: "false" },
+    remove() {
+      staleOverlay = null;
+    },
+  };
   const body = { inert: true };
   const scope = {
     chrome: {
@@ -20,8 +25,14 @@ test('content script starts once per live extension context and restarts after r
       },
     },
     console: { info() {}, warn() {} },
-    document: { addEventListener() {}, getElementById: () => staleOverlay, body, visibilityState: 'visible', hasFocus: () => true },
-    location: { href: 'https://www.tiktok.com/' },
+    document: {
+      addEventListener() {},
+      getElementById: () => staleOverlay,
+      body,
+      visibilityState: "visible",
+      hasFocus: () => true,
+    },
+    location: { href: "https://www.tiktok.com/" },
     setInterval: (callback) => intervals.push(callback),
     window: { addEventListener() {} },
   };
