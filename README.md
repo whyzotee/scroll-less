@@ -1,8 +1,10 @@
-# ScrollLess
+# Scroll-Less
 
-Spend less time on short-form video. ScrollLess is a browser extension for Chrome and Edge that tracks time on selected social platforms and blocks access when your limit is reached.
+Spend less time on short-form video. ScrollLess is a browser extension for Chrome and Edge that tracks time on selected social platforms and blocks access when your limit is reached. Built with Lit, TypeScript, Vite, and Manifest V3.
 
-Built with Lit, TypeScript, Vite, and Manifest V3.
+<p align="center">
+  <img width="100%" alt="preview" src="https://github.com/user-attachments/assets/f8d1fc7e-486c-44a4-9380-194fd8c83310" />
+</p>
 
 ## Features
 
@@ -23,7 +25,7 @@ Built with Lit, TypeScript, Vite, and Manifest V3.
 
 Other pages on YouTube, Instagram, and Facebook do not count. You can disable any supported platform in the popup.
 
-### Limit modes
+### Modes
 
 | Mode         | Behavior                                                                                                                                                                               |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
