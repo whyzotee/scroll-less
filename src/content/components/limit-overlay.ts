@@ -128,16 +128,12 @@ export class LimitOverlay {
         letter-spacing: 0;
       }
       .brand-mark {
-        display: grid;
+        display: block;
         width: 25px;
         height: 25px;
         flex: none;
-        place-items: center;
         border-radius: 8px;
-        background: linear-gradient(140deg, #4f7cff, #7254e8);
-        color: white;
-        font-size: 14px;
-        font-weight: 800;
+        object-fit: contain;
       }
       .gif-wrap {
         position: relative;
@@ -223,10 +219,10 @@ export class LimitOverlay {
     const brand = document.createElement("div");
     brand.className = "brand";
 
-    const brandMark = document.createElement("span");
+    const brandMark = document.createElement("img");
     brandMark.className = "brand-mark";
-    brandMark.setAttribute("aria-hidden", "true");
-    brandMark.textContent = "S";
+    brandMark.src = chrome.runtime.getURL("logo/logo.png");
+    brandMark.alt = "";
 
     const brandName = document.createElement("span");
     brandName.textContent = "ScrollLess";

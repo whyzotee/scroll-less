@@ -44,15 +44,11 @@ export const popupStyles = css`
   }
 
   .brand-mark {
-    display: grid;
+    display: block;
     width: 34px;
     height: 34px;
-    place-items: center;
     border-radius: 11px;
-    background: linear-gradient(140deg, #4f7cff, #7254e8);
-    color: white;
-    font-size: 19px;
-    font-weight: 800;
+    object-fit: contain;
   }
 
   h1 {

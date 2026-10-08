@@ -4,7 +4,7 @@ export function renderHeader(version: string) {
   return html`
     <header>
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true">S</span>
+        <img class="brand-mark" src="./logo/logo.png" alt="" />
         <h1>ScrollLess</h1>
       </div>
       <span class="version">${version}</span>
