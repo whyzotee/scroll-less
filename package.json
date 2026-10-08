@@ -1,0 +1,22 @@
+{
+  "name": "scroll-less",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build --mode popup && vite build --mode background && vite build --mode content",
+    "build:popup": "vite build --mode popup",
+    "build:background": "vite build --mode background",
+    "build:content": "vite build --mode content",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/node": "^26.6.4",
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  }
+}
