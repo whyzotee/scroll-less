@@ -1,13 +1,22 @@
-import { classifyUrl } from "./core";
-import type { Access, MessageReply, PingListener } from "./types";
+import { EXTENSION, TRACKING } from "../shared/constants";
+import { classifyUrl } from "../shared/core";
+import type { Access, MessageReply, PingListener } from "../shared/types";
 import { LimitOverlay } from "./components/limit-overlay";
 
-declare const chrome: any;
-
 type Reply = MessageReply<{ access: Access | null }>;
-const contentScope = globalThis as typeof globalThis & { __scrolllessPingListener?: PingListener };
-const priorListener = contentScope.__scrolllessPingListener;
-if (!priorListener || !chrome.runtime.onMessage.hasListener(priorListener)) {
+
+interface ScrollLessGlobalScope {
+  __scrolllessPingListener?: PingListener;
+}
+
+const contentScope = globalThis as typeof globalThis & ScrollLessGlobalScope;
+
+function initContentScript(): void {
+  const priorListener = contentScope.__scrolllessPingListener;
+  if (priorListener && chrome.runtime.onMessage.hasListener(priorListener)) {
+    return;
+  }
+
   const overlay = new LimitOverlay();
   let lastUrl = "";
   let inFlight = false;
@@ -30,6 +39,7 @@ if (!priorListener || !chrome.runtime.onMessage.hasListener(priorListener)) {
     if (inFlight) return;
     const url = location.href;
     const platform = classifyUrl(url);
+
     if (!platform) {
       overlay.clear();
       if (lastUrl) {
@@ -39,6 +49,7 @@ if (!priorListener || !chrome.runtime.onMessage.hasListener(priorListener)) {
       wasVisible = false;
       return;
     }
+
     lastUrl = url;
     const visible = document.visibilityState === "visible";
     if (!visible && !wasVisible) return;
@@ -73,13 +84,19 @@ if (!priorListener || !chrome.runtime.onMessage.hasListener(priorListener)) {
   }
 
   void tick();
-  setInterval(() => void tick(), 1_000);
+  setInterval(() => void tick(), TRACKING.HEARTBEAT_INTERVAL_MS);
   document.addEventListener("visibilitychange", () => void tick());
   window.addEventListener("pageshow", () => void tick());
   window.addEventListener("popstate", () => void tick());
+
   const pingListener: PingListener = (incoming, _sender, sendResponse) => {
-    if (incoming.type === "scrollless-ping") sendResponse({ ok: true });
+    if (incoming.type === EXTENSION.PING_MESSAGE_TYPE) {
+      sendResponse({ ok: true });
+    }
   };
+
   chrome.runtime.onMessage.addListener(pingListener);
   contentScope.__scrolllessPingListener = pingListener;
 }
+
+initContentScript();

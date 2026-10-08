@@ -1,7 +1,7 @@
-import { PLATFORM_NAMES } from "../core";
-import type { Access, Platform } from "../types";
-
-declare const chrome: any;
+import { EXTENSION } from "../../shared/constants";
+import { PLATFORM_NAMES } from "../../shared/core";
+import type { Access, Platform } from "../../shared/types";
+import { clock } from "../../shared/utils/time";
 
 export class LimitOverlay {
   private overlay: HTMLElement | null = null;
@@ -12,13 +12,11 @@ export class LimitOverlay {
   private gifFilesPromise: Promise<string[]> | null = null;
 
   constructor() {
-    const staleOverlay = document.getElementById("scrollless-overlay");
-
+    const staleOverlay = document.getElementById(EXTENSION.OVERLAY_ID);
     if (staleOverlay) {
       if (document.body) {
         document.body.inert = staleOverlay.dataset.previousBodyInert === "true";
       }
-
       staleOverlay.remove();
     }
   }
@@ -43,28 +41,17 @@ export class LimitOverlay {
     document.querySelectorAll("video").forEach((video) => video.pause());
 
     if (this.message) {
-      if (access.reason === "rest") {
-        this.message.textContent = `Your watch cycle is over. Take a break before returning to ${PLATFORM_NAMES[platform]}.`;
-      } else if (access.reason === "daily-platform") {
-        this.message.textContent = `You have reached today's limit for ${PLATFORM_NAMES[platform]}.`;
-      } else {
-        this.message.textContent = "You have reached your shared daily limit.";
-      }
+      this.message.textContent =
+        access.reason === "rest"
+          ? `Your watch cycle is over. Take a break before returning to ${PLATFORM_NAMES[platform]}.`
+          : access.reason === "daily-platform"
+            ? `You have reached today's limit for ${PLATFORM_NAMES[platform]}.`
+            : "You have reached your shared daily limit.";
     }
 
     if (this.countdown) {
-      this.countdown.textContent = access.availableAt ? this.formatWait(access.availableAt) : "";
+      this.countdown.textContent = access.availableAt ? clock(Math.max(0, access.availableAt - Date.now())) : "";
     }
-  }
-
-  private formatWait(until: number): string {
-    const seconds = Math.max(0, Math.ceil((until - Date.now()) / 1000));
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-    return [hours, minutes, remainingSeconds]
-      .map((part) => String(part).padStart(2, "0"))
-      .join(":");
   }
 
   private gifFiles(): Promise<string[]> {
@@ -73,12 +60,9 @@ export class LimitOverlay {
         if (!response.ok) throw new Error(`GIF list returned ${response.status}`);
         return response.json();
       })
-      .then((files: unknown) => {
-        if (!Array.isArray(files)) return [];
-        return files.filter(
-          (file): file is string => typeof file === "string" && /^[^/\\]+\.gif$/i.test(file),
-        );
-      });
+      .then((files: unknown) =>
+        Array.isArray(files) ? files.filter((file): file is string => typeof file === "string" && /^[^/\\]+\.gif$/i.test(file)) : [],
+      );
     return this.gifFilesPromise;
   }
 
@@ -98,18 +82,16 @@ export class LimitOverlay {
 
   private make() {
     if (this.overlay?.isConnected) return;
-
     if (this.overlay && this.previousBody) {
       this.previousBody.inert = this.previousInert;
       this.previousBody = null;
     }
 
     this.overlay = document.createElement("div");
-    this.overlay.id = "scrollless-overlay";
+    this.overlay.id = EXTENSION.OVERLAY_ID;
 
     const root = this.overlay.attachShadow({ mode: "closed" });
     const style = document.createElement("style");
-
     style.textContent = `
       :host {
         all: initial;
@@ -126,7 +108,6 @@ export class LimitOverlay {
         color: #17243a;
         font: 14px system-ui, sans-serif;
       }
-
       .card {
         box-sizing: border-box;
         width: min(384px, 100%);
@@ -136,7 +117,6 @@ export class LimitOverlay {
         border-radius: 17px;
         background: white;
       }
-
       .brand {
         display: flex;
         align-items: center;
@@ -147,7 +127,6 @@ export class LimitOverlay {
         font-weight: 700;
         letter-spacing: 0;
       }
-
       .brand-mark {
         display: grid;
         width: 25px;
@@ -160,24 +139,20 @@ export class LimitOverlay {
         font-size: 14px;
         font-weight: 800;
       }
-
       .gif-wrap {
         position: relative;
         overflow: hidden;
         margin: 0 0 16px;
         border-radius: 12px;
       }
-
       .gif-wrap[hidden] {
         display: none;
       }
-
       .gif-wrap img {
         display: block;
         width: 100%;
         height: auto;
       }
-
       .gif-wrap figcaption {
         position: absolute;
         right: 0;
@@ -191,21 +166,18 @@ export class LimitOverlay {
         letter-spacing: .04em;
         text-align: center;
       }
-
       h1 {
         margin: 0 0 16px;
         font-size: 24px;
         letter-spacing: -.035em;
         line-height: 1.2;
       }
-
       p {
         margin: 0 0 16px;
         color: #6d7b91;
         font-size: 14px;
         line-height: 1.5;
       }
-
       .timer {
         position: relative;
         overflow: hidden;
@@ -215,7 +187,6 @@ export class LimitOverlay {
         background: linear-gradient(135deg, #162947, #203c6c);
         color: white;
       }
-
       .timer::after {
         content: '';
         position: absolute;
@@ -227,14 +198,12 @@ export class LimitOverlay {
         border-radius: 50%;
         pointer-events: none;
       }
-
       .timer small {
         position: relative;
         display: block;
         color: #b9ccec;
         font-size: 12px;
       }
-
       .timer strong {
         position: relative;
         display: block;
@@ -276,6 +245,7 @@ export class LimitOverlay {
     const gifCaption = document.createElement("figcaption");
     gifCaption.textContent = "STOP DOOMSCROLL!";
     gif.append(gifImage, gifCaption);
+
     this.message = document.createElement("p");
 
     const timer = document.createElement("div");
@@ -286,6 +256,7 @@ export class LimitOverlay {
 
     this.countdown = document.createElement("strong");
     timer.append(timerLabel, this.countdown);
+
     card.append(brand, heading, gif, this.message, timer);
     root.append(style, card);
     document.documentElement.append(this.overlay);
