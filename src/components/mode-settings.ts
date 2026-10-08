@@ -1,5 +1,5 @@
 import { html } from "lit";
-import type { Mode, Settings } from "../core";
+import type { Mode, Settings } from "../types";
 
 export function renderModeSettings(
   mode: Mode,

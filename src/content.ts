@@ -1,19 +1,10 @@
-﻿import { classifyUrl, type Access } from "./core";
+import { classifyUrl } from "./core";
+import type { Access, MessageReply, PingListener } from "./types";
 import { LimitOverlay } from "./components/limit-overlay";
 
 declare const chrome: any;
 
-type Reply = {
-  ok: boolean;
-  result?: { access: Access | null };
-  error?: string;
-};
-
-type PingListener = (
-  incoming: { type?: string },
-  sender: unknown,
-  sendResponse: (reply: { ok: boolean }) => void,
-) => void;
+type Reply = MessageReply<{ access: Access | null }>;
 const contentScope = globalThis as typeof globalThis & { __scrolllessPingListener?: PingListener };
 const priorListener = contentScope.__scrolllessPingListener;
 if (!priorListener || !chrome.runtime.onMessage.hasListener(priorListener)) {

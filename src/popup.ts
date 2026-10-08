@@ -1,13 +1,6 @@
 import { LitElement, html } from "lit";
-import {
-  classifyUrl,
-  defaultSettings,
-  freshState,
-  PLATFORMS,
-  type Mode,
-  type Settings,
-  type UsageState,
-} from "./core";
+import { classifyUrl, defaultSettings, freshState, PLATFORMS } from "./core";
+import type { MessageReply, Mode, Settings, Snapshot, UsageState } from "./types";
 import { renderHeader } from "./components/popup-header";
 import { renderStatus } from "./components/popup-status";
 import { renderModeSettings } from "./components/mode-settings";
@@ -16,16 +9,7 @@ import { popupStyles } from "./components/popup-styles";
 
 declare const chrome: any;
 
-type Snapshot = {
-  settings: Settings;
-  state: UsageState;
-  now: number;
-};
-type Reply = {
-  ok: boolean;
-  result?: Snapshot;
-  error?: string;
-};
+type Reply = MessageReply<Snapshot>;
 
 class ScrollLessPopup extends LitElement {
   declare settings: Settings;

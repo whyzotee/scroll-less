@@ -1,6 +1,16 @@
+import type {
+  Access,
+  AccessReason,
+  ActiveSession,
+  CheckReason,
+  LastCheck,
+  Mode,
+  Platform,
+  Settings,
+  UsageState,
+} from "./types";
+
 export const PLATFORMS = ["youtube", "instagram", "tiktok", "facebook"] as const;
-export type Platform = (typeof PLATFORMS)[number];
-export type Mode = "normal" | "cooldown" | "custom";
 
 export const PLATFORM_NAMES: Record<Platform, string> = {
   youtube: "YouTube Shorts",
@@ -9,48 +19,17 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   facebook: "Facebook Reels",
 };
 
-export interface Settings {
-  mode: Mode;
-  enabled: Record<Platform, boolean>;
-  normal: {
-    totalMinutes: number;
-  };
-  cooldown: {
-    watchMinutes: number;
-    restMinutes: number;
-  };
-  custom: {
-    platformMinutes: Record<Platform, number>;
-  };
-}
-
-export interface UsageState {
-  dayKey: string;
-  totalMs: number;
-  platformMs: Record<Platform, number>;
-  cooldownUsedMs: number;
-  restUntil: number | null;
-  active: { tabId: number; platform: Platform; at: number } | null;
-  lastCheck?: {
-    platform: Platform | null;
-    at: number;
-    reason:
-      | "counting"
-      | "page-hidden"
-      | "inactive-tab"
-      | "window-unfocused"
-      | "disabled"
-      | "unrecognized"
-      | "limit-reached";
-  } | null;
-}
-
-export interface Access {
-  blocked: boolean;
-  reason: "daily-total" | "daily-platform" | "rest" | null;
-  remainingMs: number;
-  availableAt: number | null;
-}
+export type {
+  Access,
+  AccessReason,
+  ActiveSession,
+  CheckReason,
+  LastCheck,
+  Mode,
+  Platform,
+  Settings,
+  UsageState,
+};
 
 const minutes = (value: number) => value * 60_000;
 

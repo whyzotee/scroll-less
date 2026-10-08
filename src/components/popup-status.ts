@@ -1,12 +1,6 @@
 import { html } from "lit";
-import {
-  classifyUrl,
-  nextLocalMidnight,
-  PLATFORM_NAMES,
-  type Mode,
-  type Settings,
-  type UsageState,
-} from "../core";
+import { classifyUrl, nextLocalMidnight, PLATFORM_NAMES } from "../core";
+import type { Mode, Settings, UsageState } from "../types";
 import { clock } from "./time";
 
 function trackingText(state: UsageState, now: number): string {

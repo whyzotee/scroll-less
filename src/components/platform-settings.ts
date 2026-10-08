@@ -1,12 +1,6 @@
 import { html } from "lit";
-import {
-  PLATFORM_NAMES,
-  PLATFORMS,
-  type Mode,
-  type Platform,
-  type Settings,
-  type UsageState,
-} from "../core";
+import { PLATFORM_NAMES, PLATFORMS } from "../core";
+import type { Mode, Platform, Settings, UsageState } from "../types";
 import { clock } from "./time";
 
 function renderPlatform(platform: Platform, mode: Mode, settings: Settings, state: UsageState) {

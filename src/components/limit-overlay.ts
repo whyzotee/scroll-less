@@ -1,4 +1,5 @@
-import { PLATFORM_NAMES, type Access, type Platform } from "../core";
+import { PLATFORM_NAMES } from "../core";
+import type { Access, Platform } from "../types";
 
 declare const chrome: any;
 

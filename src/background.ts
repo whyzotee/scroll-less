@@ -6,20 +6,10 @@ import {
   defaultSettings,
   freshState,
   parseSettings,
-  type Platform,
-  type Settings,
-  type UsageState,
 } from "./core";
+import type { Message, Platform, Sender, Settings, Snapshot, UsageState } from "./types";
 
 declare const chrome: any;
-
-type Sender = { tab?: { id?: number; windowId: number; active: boolean } };
-type Viewing = { tabId: number; windowId: number; url: string };
-type Message =
-  | { type: "snapshot"; viewing?: Viewing }
-  | { type: "save-settings"; settings: unknown }
-  | { type: "heartbeat"; url: string; visible: boolean; pageFocused: boolean }
-  | { type: "leave" };
 
 let popupHeartbeat: { tabId: number; windowId: number; at: number } | null = null;
 let lastDebugAt = 0;
@@ -73,7 +63,12 @@ async function load(now: number): Promise<{ settings: Settings; state: UsageStat
   return { settings, state };
 }
 
-function snapshot(settings: Settings, state: UsageState, now: number, platform?: Platform | null) {
+function snapshot(
+  settings: Settings,
+  state: UsageState,
+  now: number,
+  platform?: Platform | null,
+): Snapshot {
   return {
     settings,
     state,
