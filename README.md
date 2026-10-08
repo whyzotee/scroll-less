@@ -1,46 +1,101 @@
 # ScrollLess
 
-A Chrome and Edge extension that limits time spent on YouTube Shorts, Instagram Reels, TikTok, and Facebook Reels. Built with Lit, TypeScript, and Vite.
+Spend less time on short-form video. ScrollLess is a browser extension for Chrome and Edge that tracks time on selected social platforms and blocks access when your limit is reached.
 
-## How it works
+Built with Lit, TypeScript, Vite, and Manifest V3.
 
-- **Normal:** Set one daily limit shared by all enabled platforms. When time runs out, restricted pages stay blocked until local midnight.
-- **Cooldown:** Set a watch period and a break period, such as 15 minutes of watching followed by a 30 minute break. The cycle is shared across enabled platforms, and the break continues even when the browser is closed.
-- **Custom:** Set a separate daily limit for each platform. When one platform reaches its limit, only that platform is blocked until local midnight.
-- Time counts only while a supported page is the active tab and the browser is in front. ScrollLess measures time, not scroll events.
-- TikTok counts all pages on `tiktok.com`, `www.tiktok.com`, and `m.tiktok.com`, including profiles and search. YouTube, Instagram, and Facebook count only Shorts or Reels pages.
-- You can enable or disable each platform and change settings from the popup.
-- Time continues counting while the popup is open on an active supported tab, even if the website reports that its page is hidden by the popup.
-- Data is stored locally in this browser with `chrome.storage.local` and is not synced across devices.
-- When a limit is reached, the blocking screen picks a random GIF from `public/gif/` and displays “STOP DOOMSCROLL!” at the bottom of the image. Add more `.gif` files there, rebuild, and reload the extension to include them.
+## Features
 
-## Build
+- Choose the platforms you want to limit.
+- See your remaining time and tracking status in the extension popup.
+- Set a shared daily limit, a watch-and-break cycle, or separate daily limits for each platform.
+- Get a full-page reminder with a random GIF when a limit is reached.
+- Keep settings and usage data locally in your browser with `chrome.storage.local`.
 
-The popup controller is in `src/popup.ts`, with its UI sections and styles in `src/components/`. The page tracker is in `src/content.ts`; its blocking screen is in `src/components/limit-overlay.ts`.
+### Supported pages
+
+| Platform | Pages that count toward the limit |
+| --- | --- |
+| YouTube | Shorts pages under `youtube.com/shorts/` |
+| Instagram | Reel and Reels pages under `instagram.com/reel/` and `instagram.com/reels/` |
+| TikTok | All pages on `tiktok.com`, `www.tiktok.com`, and `m.tiktok.com`, including the feed, profiles, and search |
+| Facebook | Reel and Reels pages under `facebook.com/reel/` and `facebook.com/reels/` |
+
+Other pages on YouTube, Instagram, and Facebook do not count. You can disable any supported platform in the popup.
+
+### Limit modes
+
+| Mode | Behavior |
+| --- | --- |
+| **Normal** | One daily time limit shared by all enabled platforms. When it runs out, those pages stay blocked until local midnight. |
+| **Cooldown** | One shared watch period followed by a timed break. For example, watch for 15 minutes, then wait 30 minutes before the next cycle. The break continues even when the browser is closed. |
+| **Custom** | A separate daily limit for each enabled platform. Reaching one platform's limit does not block the others. Limits reset at local midnight. |
+
+ScrollLess measures elapsed time, not scroll events. Time counts while a supported page is the active tab and the browser is in front. It also continues counting if you open the ScrollLess popup over that active page. Switching tabs or moving to another application pauses tracking.
+
+## Install from source
+
+This repository contains the extension source. Build it before loading it into your browser:
 
 ```powershell
-npm install
-npm run build
-npm test
+bun install
+bun run build
 ```
 
-`vite.config.ts` contains the build settings for the popup, background service worker, and content script. `npm run build` runs each Vite target in order because the content script needs an IIFE output while the service worker uses an ES module. The Vite plugin also generates the GIF list automatically.
+Then:
 
-The build creates `dist/index.html`, `dist/background.js`, `dist/content.js`, `dist/manifest.json`, the popup JavaScript in `dist/assets/`, and platform icons in `dist/icons/`.
+1. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge.
+2. Enable **Developer mode**.
+3. Select **Load unpacked** and choose this project's `dist` folder.
+4. Open a supported page, click the ScrollLess icon, choose a mode and platforms, then select **Save settings**.
 
-## Install
+The default setting is Normal mode with a shared 60-minute daily limit and all four platforms enabled. After changing source files, run `bun run build` again and select **Reload** on the Extensions page. Always load `dist`, because `public` does not contain the built popup and scripts.
 
-1. Open `chrome://extensions` or `edge://extensions`.
-2. Turn on **Developer mode**.
-3. Click **Load unpacked** and select `C:\Users\zenle\Desktop\scrollless\dist`.
-4. Click the **ScrollLess** icon to configure your limits.
+## Development
 
-After installing or reloading the extension, ScrollLess activates supported tabs that are already open. The popup shows whether time is counting or why it is paused. Automatic activation requires site access on the supported domains.
+```powershell
+bun run dev
+```
 
-Check logs in the page DevTools (`[ScrollLess content]`) and under **Service worker → Inspect** on the Extensions page (`[ScrollLess background]`). Background logs show focus state and counted seconds.
+The Vite dev server previews the popup UI. To test time tracking, tab focus, and the blocking screen, build and load the extension from `dist`.
 
-Select the `dist` folder: the `public` folder contains the source `manifest.json` but no `index.html`. After changing the code, run `npm run build` and click **Reload** on the Extensions page.
+The complete build runs TypeScript checking and three Vite targets in order: popup, background service worker, and content script. A plain `vite build` produces only the popup. The full output includes `index.html`, `manifest.json`, `background.js`, `content.js`, popup assets, icons, and GIFs.
 
-The **Errors** list on the Extensions page may still show old errors after a fix. Click **Clear all**, then open the popup from a TikTok or Shorts tab again. The loaded version appears in the popup's top right corner.
+```text
+src/core.ts                    URL detection, settings, time limits, and daily reset
+src/background.ts              Tracking and storage in the service worker
+src/content.ts                 Page heartbeat and blocking-screen control
+src/popup.ts                   Lit popup controller
+src/components/               Popup UI and blocking screen
+public/manifest.json           Extension manifest
+public/icons/                  Platform icons
+public/gif/                    Blocking-screen GIFs
+vite.config.ts                 Popup, background, and content builds
+tests/                         Core, background, and content tests
+```
 
-`npm run dev` previews the popup UI in a browser. Test time tracking and blocking through the extension loaded from `dist`.
+To add a blocking-screen GIF, place a `.gif` file in `public/gif/`, rebuild, and reload the extension. The build creates `dist/gif/index.json` from the files in that folder; the blocking screen chooses one at random.
+
+### Tests
+
+Build first because two test files read compiled scripts from `dist`:
+
+```powershell
+bun run build
+node --experimental-strip-types tests/core.test.mjs
+node tests/background.test.mjs
+node tests/content.test.mjs
+```
+
+## Troubleshooting
+
+- **The popup says no supported page was detected:** Open one of the pages listed above in the active tab. TikTok's home page counts; a regular YouTube video does not.
+- **Time is paused:** Bring the supported tab and browser window to the front. The popup shows the current tracking reason.
+- **Changes do not appear:** Rebuild, reload the extension on the Extensions page, and refresh any already-open supported tabs if needed.
+- **The extension cannot access a page:** Browser internal pages such as `chrome://` and `edge://` do not allow content scripts.
+
+For deeper debugging, check `[ScrollLess content]` in the page DevTools console and `[ScrollLess background]` in the extension service worker console. The popup displays the loaded extension version in its top-right corner.
+
+## Releases and contributions
+
+See [CHANGELOG.md](CHANGELOG.md) for release history. Changes are grouped from Conventional Commits with [git-cliff](https://git-cliff.org/). Project architecture and verification guidance are in [AGENTS.md](AGENTS.md).
