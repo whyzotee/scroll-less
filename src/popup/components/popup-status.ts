@@ -1,12 +1,13 @@
 import { html } from "lit";
-import { classifyUrl, nextLocalMidnight, PLATFORM_NAMES } from "../core";
-import type { Mode, Settings, UsageState } from "../types";
-import { clock } from "./time";
+import { TIME_MS, TRACKING } from "../../shared/constants";
+import { classifyUrl, nextLocalMidnight, PLATFORM_NAMES } from "../../shared/core";
+import type { Mode, Settings, UsageState } from "../../shared/types";
+import { clock } from "../../shared/utils/time";
 
 function trackingText(state: UsageState, now: number): string {
   const check = state.lastCheck;
 
-  if (!check || now - check.at > 5_000) {
+  if (!check || now - check.at > TRACKING.STALE_CHECK_THRESHOLD_MS) {
     return "No supported page detected. Open a selected site, then click ScrollLess.";
   }
 
@@ -29,24 +30,14 @@ function trackingText(state: UsageState, now: number): string {
   }
 }
 
-export function renderStatus(
-  mode: Mode,
-  settings: Settings,
-  state: UsageState,
-  now: number,
-  viewingUrl?: string,
-) {
-  const totalLeft = Math.max(0, settings.normal.totalMinutes * 60_000 - state.totalMs);
+export function renderStatus(mode: Mode, settings: Settings, state: UsageState, now: number, viewingUrl?: string) {
+  const totalLeft = Math.max(0, settings.normal.totalMinutes * TIME_MS.MINUTE - state.totalMs);
   const restLeft = state.restUntil ? Math.max(0, state.restUntil - now) : 0;
-  const watchLeft = Math.max(0, settings.cooldown.watchMinutes * 60_000 - state.cooldownUsedMs);
-  const recentPlatform =
-    now - (state.lastCheck?.at ?? 0) < 5_000 ? state.lastCheck?.platform : null;
+  const watchLeft = Math.max(0, settings.cooldown.watchMinutes * TIME_MS.MINUTE - state.cooldownUsedMs);
+  const recentPlatform = now - (state.lastCheck?.at ?? 0) < TRACKING.STALE_CHECK_THRESHOLD_MS ? state.lastCheck?.platform : null;
   const customPlatform = classifyUrl(viewingUrl ?? "") ?? recentPlatform;
   const customLeft = customPlatform
-    ? Math.max(
-        0,
-        settings.custom.platformMinutes[customPlatform] * 60_000 - state.platformMs[customPlatform],
-      )
+    ? Math.max(0, settings.custom.platformMinutes[customPlatform] * TIME_MS.MINUTE - state.platformMs[customPlatform])
     : null;
 
   let label: string;
@@ -57,9 +48,7 @@ export function renderStatus(
     label = "Total time left today";
     time = clock(totalLeft);
   } else if (mode === "custom") {
-    label = customPlatform
-      ? `Time left on ${PLATFORM_NAMES[customPlatform]}`
-      : "Time left by platform";
+    label = customPlatform ? `Time left on ${PLATFORM_NAMES[customPlatform]}` : "Time left by platform";
     time = customLeft === null ? "\u2014" : clock(customLeft);
   } else {
     label = restLeft > 0 ? "Break time left" : "Watch time left this cycle";
@@ -67,8 +56,7 @@ export function renderStatus(
   }
 
   if (mode === "cooldown") {
-    detail =
-      restLeft > 0 ? "A new cycle starts after the break" : "A break starts when time runs out";
+    detail = restLeft > 0 ? "A new cycle starts after the break" : "A break starts when time runs out";
   } else {
     const resetTime = new Date(nextLocalMidnight(now)).toLocaleTimeString("en-US", {
       hour: "numeric",

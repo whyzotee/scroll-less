@@ -1,19 +1,13 @@
 import { html } from "lit";
-import { PLATFORM_NAMES, PLATFORMS } from "../core";
-import type { Mode, Platform, Settings, UsageState } from "../types";
-import { clock } from "./time";
+import { LIMITS, TIME_MS } from "../../shared/constants";
+import { PLATFORM_NAMES, PLATFORMS } from "../../shared/core";
+import type { Mode, Platform, Settings, UsageState } from "../../shared/types";
+import { clock } from "../../shared/utils/time";
 
 function renderPlatform(platform: Platform, mode: Mode, settings: Settings, state: UsageState) {
-  const remaining = Math.max(
-    0,
-    settings.custom.platformMinutes[platform] * 60_000 - state.platformMs[platform],
-  );
+  const remaining = Math.max(0, settings.custom.platformMinutes[platform] * TIME_MS.MINUTE - state.platformMs[platform]);
   const description =
-    mode === "normal"
-      ? "Shares the daily limit"
-      : mode === "custom"
-        ? `${clock(remaining)} left`
-        : "Shares the watch and break cycle";
+    mode === "normal" ? "Shares the daily limit" : mode === "custom" ? `${clock(remaining)} left` : "Shares the watch and break cycle";
 
   return html`
     <div class="platform-card">
@@ -41,8 +35,8 @@ function renderPlatform(platform: Platform, mode: Mode, settings: Settings, stat
           <input
             type="number"
             name="minutes-${platform}"
-            min="1"
-            max="1440"
+            min=${String(LIMITS.MIN_MINUTES)}
+            max=${String(LIMITS.MAX_MINUTES)}
             required
             .value=${String(settings.custom.platformMinutes[platform])}
           />
@@ -60,9 +54,7 @@ export function renderPlatformSettings(mode: Mode, settings: Settings, state: Us
         <h2>Platforms</h2>
         <span class="hint">Choose sites to limit</span>
       </div>
-      <div class="platform-list">
-        ${PLATFORMS.map((platform) => renderPlatform(platform, mode, settings, state))}
-      </div>
+      <div class="platform-list">${PLATFORMS.map((platform) => renderPlatform(platform, mode, settings, state))}</div>
     </div>
   `;
 }

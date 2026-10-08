@@ -1,11 +1,8 @@
 import { html } from "lit";
-import type { Mode, Settings } from "../types";
+import { LIMITS } from "../../shared/constants";
+import type { Mode, Settings } from "../../shared/types";
 
-export function renderModeSettings(
-  mode: Mode,
-  settings: Settings,
-  onModeChange: (mode: Mode) => void,
-) {
+export function renderModeSettings(mode: Mode, settings: Settings, onModeChange: (mode: Mode) => void) {
   return html`
     <div class="card">
       <div class="section-head">
@@ -59,8 +56,8 @@ export function renderModeSettings(
             id="totalMinutes"
             type="number"
             name="totalMinutes"
-            min="1"
-            max="1440"
+            min=${String(LIMITS.MIN_MINUTES)}
+            max=${String(LIMITS.MAX_MINUTES)}
             required
             .value=${String(settings.normal.totalMinutes)}
           />
@@ -81,8 +78,8 @@ export function renderModeSettings(
             id="watchMinutes"
             type="number"
             name="watchMinutes"
-            min="1"
-            max="1440"
+            min=${String(LIMITS.MIN_MINUTES)}
+            max=${String(LIMITS.MAX_MINUTES)}
             required
             .value=${String(settings.cooldown.watchMinutes)}
           />
@@ -96,8 +93,8 @@ export function renderModeSettings(
             id="restMinutes"
             type="number"
             name="restMinutes"
-            min="1"
-            max="1440"
+            min=${String(LIMITS.MIN_MINUTES)}
+            max=${String(LIMITS.MAX_MINUTES)}
             required
             .value=${String(settings.cooldown.restMinutes)}
           />
