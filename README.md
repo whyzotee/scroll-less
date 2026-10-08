@@ -64,11 +64,10 @@ The Vite dev server previews the popup UI. To test time tracking, tab focus, and
 The complete build runs TypeScript checking and three Vite targets in order: popup, background service worker, and content script. A plain `vite build` produces only the popup. The full output includes `index.html`, `manifest.json`, `background.js`, `content.js`, popup assets, icons, and GIFs.
 
 ```text
-src/core.ts                    URL detection, settings, time limits, and daily reset
-src/background.ts              Tracking and storage in the service worker
-src/content.ts                 Page heartbeat and blocking-screen control
-src/popup.ts                   Lit popup controller
-src/components/               Popup UI and blocking screen
+src/background/               Tracking and storage in the service worker
+src/content/                  Page heartbeat and blocking-screen control
+src/popup/                    Lit popup controller, service, and UI components
+src/shared/                   URL detection, constants, shared types, and clock utility
 public/manifest.json           Extension manifest
 public/icons/                  Platform icons
 public/gif/                    Blocking-screen GIFs
