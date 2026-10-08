@@ -9,7 +9,7 @@ import {
   freshState,
   nextLocalMidnight,
   parseSettings,
-} from "../src/core.ts";
+} from "../src/shared/core.ts";
 
 const minute = 60_000;
 
@@ -58,10 +58,7 @@ test("existing settings restore old per-platform limits in Custom", () => {
   const settings = parseSettings(stored);
   assert.deepEqual(settings?.normal, { totalMinutes: 40 });
   assert.equal(settings?.custom.platformMinutes.youtube, 10);
-  assert.equal(
-    accessFor(freshState(Date.now()), settings, "youtube", Date.now()).remainingMs,
-    40 * minute,
-  );
+  assert.equal(accessFor(freshState(Date.now()), settings, "youtube", Date.now()).remainingMs, 40 * minute);
 });
 
 test("Custom has independent daily limits and resets each platform at midnight", () => {
@@ -80,10 +77,7 @@ test("Custom has independent daily limits and resets each platform at midnight",
   assert.equal(state.totalMs, 55 * minute);
   state = advanceClock(state, nextLocalMidnight(now));
   assert.equal(state.platformMs.youtube, 0);
-  assert.equal(
-    accessFor(state, settings, "youtube", nextLocalMidnight(now)).remainingMs,
-    20 * minute,
-  );
+  assert.equal(accessFor(state, settings, "youtube", nextLocalMidnight(now)).remainingMs, 20 * minute);
 });
 
 test("daily use resets at local midnight while cooldown rest persists", () => {

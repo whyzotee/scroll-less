@@ -1,14 +1,6 @@
-import type {
-  Access,
-  AccessReason,
-  ActiveSession,
-  CheckReason,
-  LastCheck,
-  Mode,
-  Platform,
-  Settings,
-  UsageState,
-} from "./types";
+import type { Access, AccessReason, ActiveSession, CheckReason, LastCheck, Mode, Platform, Settings, UsageState } from "./types/index.ts";
+
+import { LIMITS, TIME_MS } from "./constants.ts";
 
 export const PLATFORMS = ["youtube", "instagram", "tiktok", "facebook"] as const;
 
@@ -19,19 +11,9 @@ export const PLATFORM_NAMES: Record<Platform, string> = {
   facebook: "Facebook Reels",
 };
 
-export type {
-  Access,
-  AccessReason,
-  ActiveSession,
-  CheckReason,
-  LastCheck,
-  Mode,
-  Platform,
-  Settings,
-  UsageState,
-};
+export type { Access, AccessReason, ActiveSession, CheckReason, LastCheck, Mode, Platform, Settings, UsageState };
 
-const minutes = (value: number) => value * 60_000;
+const minutes = (value: number) => value * TIME_MS.MINUTE;
 
 export function defaultSettings(): Settings {
   return {
@@ -127,12 +109,7 @@ export function classifyUrl(rawUrl: string): Platform | null {
   return null;
 }
 
-export function accessFor(
-  state: UsageState,
-  settings: Settings,
-  platform: Platform,
-  now: number,
-): Access {
+export function accessFor(state: UsageState, settings: Settings, platform: Platform, now: number): Access {
   if (!settings.enabled[platform]) {
     return { blocked: false, reason: null, remainingMs: 0, availableAt: null };
   }
@@ -153,10 +130,7 @@ export function accessFor(
   const availableAt = nextLocalMidnight(now);
 
   if (settings.mode === "custom") {
-    const platformLeft = Math.max(
-      0,
-      minutes(settings.custom.platformMinutes[platform]) - state.platformMs[platform],
-    );
+    const platformLeft = Math.max(0, minutes(settings.custom.platformMinutes[platform]) - state.platformMs[platform]);
 
     if (platformLeft === 0) {
       return { blocked: true, reason: "daily-platform", remainingMs: 0, availableAt };
@@ -174,13 +148,7 @@ export function accessFor(
   return { blocked: false, reason: null, remainingMs: totalLeft, availableAt: null };
 }
 
-export function consume(
-  state: UsageState,
-  settings: Settings,
-  platform: Platform,
-  elapsedMs: number,
-  now: number,
-): UsageState {
+export function consume(state: UsageState, settings: Settings, platform: Platform, elapsedMs: number, now: number): UsageState {
   const next = advanceClock(state, now);
 
   if (!settings.enabled[platform] || elapsedMs <= 0) return next;
@@ -215,13 +183,9 @@ export function parseSettings(value: unknown): Settings | null {
   if (!item.enabled || !item.normal || !item.cooldown) return null;
 
   const validMinutes = (number: unknown) =>
-    Number.isInteger(number) && (number as number) >= 1 && (number as number) <= 1440;
+    Number.isInteger(number) && (number as number) >= LIMITS.MIN_MINUTES && (number as number) <= LIMITS.MAX_MINUTES;
 
-  if (
-    !validMinutes(item.normal.totalMinutes) ||
-    !validMinutes(item.cooldown.watchMinutes) ||
-    !validMinutes(item.cooldown.restMinutes)
-  ) {
+  if (!validMinutes(item.normal.totalMinutes) || !validMinutes(item.cooldown.watchMinutes) || !validMinutes(item.cooldown.restMinutes)) {
     return null;
   }
 
@@ -229,36 +193,25 @@ export function parseSettings(value: unknown): Settings | null {
     if (typeof item.enabled[platform] !== "boolean") return null;
   }
 
-  const legacyPlatformMinutes = (
-    item.normal as Settings["normal"] & { platformMinutes?: Record<Platform, number> }
-  ).platformMinutes;
+  const legacyPlatformMinutes = (item.normal as Settings["normal"] & { platformMinutes?: Record<Platform, number> }).platformMinutes;
 
   const savedPlatformMinutes = item.custom?.platformMinutes ?? legacyPlatformMinutes;
   const platformMinutes =
-    savedPlatformMinutes &&
-    PLATFORMS.every((platform) => validMinutes(savedPlatformMinutes[platform]))
+    savedPlatformMinutes && PLATFORMS.every((platform) => validMinutes(savedPlatformMinutes[platform]))
       ? savedPlatformMinutes
       : defaultSettings().custom.platformMinutes;
 
-  if (
-    item.custom &&
-    !PLATFORMS.every((platform) => validMinutes(item.custom!.platformMinutes?.[platform]))
-  )
-    return null;
+  if (item.custom && !PLATFORMS.every((platform) => validMinutes(item.custom!.platformMinutes?.[platform]))) return null;
   return {
     mode: item.mode,
-    enabled: Object.fromEntries(
-      PLATFORMS.map((platform) => [platform, item.enabled![platform]]),
-    ) as Record<Platform, boolean>,
+    enabled: Object.fromEntries(PLATFORMS.map((platform) => [platform, item.enabled![platform]])) as Record<Platform, boolean>,
     normal: { totalMinutes: item.normal.totalMinutes! },
     cooldown: {
       watchMinutes: item.cooldown.watchMinutes!,
       restMinutes: item.cooldown.restMinutes!,
     },
     custom: {
-      platformMinutes: Object.fromEntries(
-        PLATFORMS.map((platform) => [platform, platformMinutes[platform]]),
-      ) as Record<Platform, number>,
+      platformMinutes: Object.fromEntries(PLATFORMS.map((platform) => [platform, platformMinutes[platform]])) as Record<Platform, number>,
     },
   };
 }

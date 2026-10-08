@@ -1,13 +1,6 @@
 import type { Platform } from "./platform";
 
-export type CheckReason =
-  | "counting"
-  | "page-hidden"
-  | "inactive-tab"
-  | "window-unfocused"
-  | "disabled"
-  | "unrecognized"
-  | "limit-reached";
+export type CheckReason = "counting" | "page-hidden" | "inactive-tab" | "window-unfocused" | "disabled" | "unrecognized" | "limit-reached";
 
 export interface ActiveSession {
   tabId: number;
