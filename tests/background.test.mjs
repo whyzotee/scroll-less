@@ -63,8 +63,7 @@ test("TikTok time decreases while the extension popup is open and the page is hi
     onStartup();
     await new Promise(setImmediate);
     assert.equal(injected.length, 4);
-    const send = (message, sender = {}) =>
-      new Promise((resolve) => listener(message, sender, resolve));
+    const send = (message, sender = {}) => new Promise((resolve) => listener(message, sender, resolve));
     const viewing = { tabId: 7, windowId: 2, url: "https://www.tiktok.com/th-TH/" };
     await send({ type: "snapshot", viewing });
     now += 1_000;

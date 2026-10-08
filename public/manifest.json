@@ -1,27 +1,17 @@
 {
   "manifest_version": 3,
   "name": "ScrollLess",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Limit short-form video time across social platforms.",
   "permissions": ["storage", "scripting", "activeTab"],
-  "host_permissions": [
-    "https://*.youtube.com/*",
-    "https://*.instagram.com/*",
-    "https://*.tiktok.com/*",
-    "https://*.facebook.com/*"
-  ],
+  "host_permissions": ["https://*.youtube.com/*", "https://*.instagram.com/*", "https://*.tiktok.com/*", "https://*.facebook.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://*.youtube.com/*",
-        "https://*.instagram.com/*",
-        "https://*.tiktok.com/*",
-        "https://*.facebook.com/*"
-      ],
+      "matches": ["https://*.youtube.com/*", "https://*.instagram.com/*", "https://*.tiktok.com/*", "https://*.facebook.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
@@ -29,12 +19,7 @@
   "web_accessible_resources": [
     {
       "resources": ["gif/*"],
-      "matches": [
-        "https://*.youtube.com/*",
-        "https://*.instagram.com/*",
-        "https://*.tiktok.com/*",
-        "https://*.facebook.com/*"
-      ]
+      "matches": ["https://*.youtube.com/*", "https://*.instagram.com/*", "https://*.tiktok.com/*", "https://*.facebook.com/*"]
     }
   ],
   "action": {

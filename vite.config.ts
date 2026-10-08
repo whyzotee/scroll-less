@@ -33,7 +33,7 @@ export default defineConfig(({ command, mode }) => {
         outDir: "dist",
         emptyOutDir: false,
         lib: {
-          entry: resolve("src/background.ts"),
+          entry: resolve("src/background/index.ts"),
           formats: ["es"],
           fileName: () => "background.js",
         },
@@ -48,7 +48,7 @@ export default defineConfig(({ command, mode }) => {
         outDir: "dist",
         emptyOutDir: false,
         lib: {
-          entry: resolve("src/content.ts"),
+          entry: resolve("src/content/index.ts"),
           name: "ScrollLessContent",
           formats: ["iife"],
           fileName: () => "content.js",
