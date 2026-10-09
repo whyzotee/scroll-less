@@ -1,6 +1,6 @@
-# Scroll-Less
+# ScrollLess
 
-Spend less time on short-form video. ScrollLess is a browser extension for Chrome and Edge that tracks time on selected social platforms and blocks access when your limit is reached. Built with Lit, TypeScript, Vite, and Manifest V3.
+Spend less time scrolling. ScrollLess is a browser extension for Chrome and Edge that tracks time on selected social feeds and videos and blocks access when your limit is reached.
 
 <p align="center">
   <img width="100%" alt="preview" src="https://github.com/user-attachments/assets/f8d1fc7e-486c-44a4-9380-194fd8c83310" />
@@ -8,7 +8,7 @@ Spend less time on short-form video. ScrollLess is a browser extension for Chrom
 
 ## Features
 
-- Choose the platforms you want to limit.
+- Choose the platforms and page types you want to limit.
 - See your remaining time and tracking status in the extension popup.
 - Set a shared daily limit, a watch-and-break cycle, or separate daily limits for each platform.
 - Get a full-page reminder with a random GIF when a limit is reached.
@@ -16,14 +16,14 @@ Spend less time on short-form video. ScrollLess is a browser extension for Chrom
 
 ### Supported pages
 
-| Platform  | Pages that count toward the limit                                                                         |
-| --------- | --------------------------------------------------------------------------------------------------------- |
-| YouTube   | Shorts pages under `youtube.com/shorts/`                                                                  |
-| Instagram | Reel and Reels pages under `instagram.com/reel/` and `instagram.com/reels/`                               |
-| TikTok    | All pages on `tiktok.com`, `www.tiktok.com`, and `m.tiktok.com`, including the feed, profiles, and search |
-| Facebook  | Reel and Reels pages under `facebook.com/reel/` and `facebook.com/reels/`                                 |
+| Platform  | Selectable pages                                                                |
+| --------- | ------------------------------------------------------------------------------- |
+| YouTube   | Videos under `/watch?v=…` and Shorts under `/shorts/`, each with its own switch |
+| Instagram | Feed (Home, Explore, and posts under `/p/`) and Reels, each with its own switch |
+| TikTok    | One switch for all pages on `tiktok.com`, `www.tiktok.com`, and `m.tiktok.com`  |
+| Facebook  | Feed (Home and `/feed/`) and Reels, each with its own switch                    |
 
-Other pages on YouTube, Instagram, and Facebook do not count. You can disable any supported platform in the popup.
+YouTube Home, Instagram Direct, and Facebook Messages do not count. Inline Facebook chat pauses tracking while you interact with the chat pane. The blocking screen links to Facebook Messages so you can still chat after reaching a limit. Because Facebook's page markup can change, inline chat detection is best effort.
 
 ### Modes
 
@@ -51,7 +51,7 @@ Then:
 3. Select **Load unpacked** and choose this project's `dist` folder.
 4. Open a supported page, click the ScrollLess icon, choose a mode and platforms, then select **Save settings**.
 
-The default setting is Normal mode with a shared 60-minute daily limit and all four platforms enabled. After changing source files, run `bun run build` again and select **Reload** on the Extensions page. Always load `dist`, because `public` does not contain the built popup and scripts.
+The default setting is Normal mode with a shared 60-minute daily limit and all four platforms enabled. YouTube Shorts is on by default; YouTube Videos is off. After changing source files, run `bun run build` again and select **Reload** on the Extensions page. Always load `dist`, because `public` does not contain the built popup and scripts.
 
 ## Development
 
@@ -90,7 +90,7 @@ node tests/content.test.mjs
 
 ## Troubleshooting
 
-- **The popup says no supported page was detected:** Open one of the pages listed above in the active tab. TikTok's home page counts; a regular YouTube video does not.
+- **The popup says no supported page was detected:** Open one of the pages listed above in the active tab. TikTok's home page counts; YouTube Home does not. YouTube videos count only if the Videos option is enabled.
 - **Time is paused:** Bring the supported tab and browser window to the front. The popup shows the current tracking reason.
 - **Changes do not appear:** Rebuild, reload the extension on the Extensions page, and refresh any already-open supported tabs if needed.
 - **The extension cannot access a page:** Browser internal pages such as `chrome://` and `edge://` do not allow content scripts.

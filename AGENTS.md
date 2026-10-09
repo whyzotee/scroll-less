@@ -2,28 +2,29 @@
 
 ## Project purpose
 
-ScrollLess is a Manifest V3 extension for Chrome and Edge. It limits time spent on YouTube Shorts, Instagram Reels, TikTok, and Facebook Reels. The popup is built with Lit and TypeScript; Vite produces the popup, background service worker, and content script. Keep the product name **ScrollLess** and all user-facing text in English.
+ScrollLess is a Manifest V3 extension for Chrome and Edge. It limits time spent on selected social feeds and videos across YouTube, Instagram, TikTok, and Facebook. The popup is built with Lit and TypeScript; Vite produces the popup, background service worker, and content script. Keep the product name **ScrollLess** and all user-facing text in English.
 
 ## Repository map
 
-| Path                         | Responsibility                                                                                                               |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `src/shared/core.ts`         | Platform URL matching, defaults, local-day rollover, and limit calculations. Keep this logic independent of Chrome APIs.     |
-| `src/shared/constants.ts`    | Global time limits, intervals, and extension constants.                                                                      |
-| `src/shared/types/`          | TypeScript definitions partitioned by domain (platform, settings, usage, messages).                                          |
-| `src/shared/utils/time.ts`   | Time formatting helpers.                                                                                                     |
-| `src/background/index.ts`    | Authoritative time tracking, `chrome.storage.local`, message handling, tab activation after install/startup, and debug logs. |
-| `src/content/index.ts`       | One-second heartbeat on supported pages, navigation/visibility checks, and content script lifecycle.                         |
-| `src/content/components/`    | Blocking overlay component.                                                                                                  |
-| `src/popup/index.ts`         | Lit popup controller, state snapshots, and refresh timers.                                                                   |
-| `src/popup/popup-service.ts` | Active tab discovery, background API messaging, and form serialization.                                                      |
-| `src/popup/components/`      | Popup sections and Lit styles.                                                                                               |
-| `public/manifest.json`       | Extension permissions, URL matches, popup, service worker, content script, and web-accessible GIFs.                          |
-| `public/icons/*.webp`        | Platform icons in the popup.                                                                                                 |
-| `public/gif/*.gif`           | GIFs chosen at random on the blocking screen.                                                                                |
-| `vite.config.ts`             | Three Vite build modes and generation of `gif/index.json`.                                                                   |
-| `tests/`                     | Core behavior and background/content regression tests.                                                                       |
-| `cliff.toml`, `CHANGELOG.md` | git-cliff configuration and release history.                                                                                 |
+| Path                           | Responsibility                                                                                                               |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `src/shared/core.ts`           | Platform URL matching, defaults, local-day rollover, and limit calculations. Keep this logic independent of Chrome APIs.     |
+| `src/shared/constants.ts`      | Global time limits, intervals, and extension constants.                                                                      |
+| `src/shared/types/`            | TypeScript definitions partitioned by domain (platform, settings, usage, messages).                                          |
+| `src/shared/utils/time.ts`     | Time formatting helpers.                                                                                                     |
+| `src/background/index.ts`      | Authoritative time tracking, `chrome.storage.local`, message handling, tab activation after install/startup, and debug logs. |
+| `src/content/index.ts`         | One-second heartbeat on supported pages, navigation/visibility checks, and content script lifecycle.                         |
+| `src/content/facebook-chat.ts` | Best-effort detection of interaction with Facebook inline chat.                                                              |
+| `src/content/components/`      | Blocking overlay component.                                                                                                  |
+| `src/popup/index.ts`           | Lit popup controller, state snapshots, and refresh timers.                                                                   |
+| `src/popup/popup-service.ts`   | Active tab discovery, background API messaging, and form serialization.                                                      |
+| `src/popup/components/`        | Popup sections and Lit styles.                                                                                               |
+| `public/manifest.json`         | Extension permissions, URL matches, popup, service worker, content script, and web-accessible GIFs.                          |
+| `public/icons/*.webp`          | Platform icons in the popup.                                                                                                 |
+| `public/gif/*.gif`             | GIFs chosen at random on the blocking screen.                                                                                |
+| `vite.config.ts`               | Three Vite build modes and generation of `gif/index.json`.                                                                   |
+| `tests/`                       | Core behavior and background/content regression tests.                                                                       |
+| `cliff.toml`, `CHANGELOG.md`   | git-cliff configuration and release history.                                                                                 |
 
 ## Product behavior to preserve
 
@@ -32,7 +33,8 @@ ScrollLess is a Manifest V3 extension for Chrome and Edge. It limits time spent 
 - **Custom:** An independent daily budget for each enabled platform.
 - Daily budgets reset at the next **local midnight**. Do not reset them on popup close, tab reload, browser restart, or extension reload.
 - Count time only for a supported page in the active tab while the browser is in front. Keep counting when the ScrollLess popup is open for that active page. Track elapsed time, not scroll events.
-- TikTok covers the main `tiktok.com`, `www.tiktok.com`, and `m.tiktok.com` domains across all paths. YouTube, Instagram, and Facebook cover only Shorts/Reels URL paths. Keep URL classification aligned with `public/manifest.json` host access.
+- Users can select YouTube `/watch` and `/shorts` separately, Instagram Feed and Reels separately, and Facebook Feed and Reels separately. YouTube Home, Instagram Direct, and Facebook Messages are excluded. TikTok uses one switch for the main `tiktok.com`, `www.tiktok.com`, and `m.tiktok.com` domains across all paths. Keep URL classification aligned with `public/manifest.json` host access.
+- Facebook inline chat pauses tracking while the user interacts with its chat pane. The blocking screen provides a link to Facebook Messages so chat remains accessible when a limit is reached.
 - The background service worker owns persisted settings and usage. Content and popup scripts exchange messages with it; they must not maintain competing usage counters.
 - At a limit, the content script shows a blocking overlay, pauses videos, and restores page interaction when access returns. Keep overlay creation safe across extension reloads and repeated injection.
 - Store settings and usage in `chrome.storage.local`. The extension does not sync across devices.
@@ -67,8 +69,8 @@ There is currently no `test` script in `package.json`; do not document `npm test
 
 ## Editing guidance
 
-- Put pure rules and data validation in `src/core.ts`, not in the Lit view or content script. Update its tests when behavior changes.
-- Keep `src/popup.ts` as a controller. Put popup markup and styles in the appropriate `src/components/` file.
+- Put pure rules and data validation in `src/shared/core.ts`, not in the Lit view or content script. Update its tests when behavior changes.
+- Keep `src/popup/index.ts` as a controller. Put popup markup and styles in the appropriate `src/popup/components/` file.
 - Keep storage and message handling serialized in the background script so simultaneous heartbeats and popup snapshots do not overwrite one another.
 - If changing supported platforms or URL patterns, update classification, manifest permissions/matches, UI labels/icons, and relevant tests together.
 - If changing version, keep `package.json` and `public/manifest.json` equal. Use `v`-prefixed Git tags such as `v0.1.0` for releases.
