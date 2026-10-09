@@ -1,3 +1,15 @@
+## [0.1.2] - 2026-10-09
+
+### 🚀 Features
+
+- *(tracking)* Add selectable social feeds and video pages
+- *(facebook)* Pause tracking during inline chats
+- *(overlay)* Add Bocchi reminder GIF
+
+### 📚 Documentation
+
+- Update changelog for v0.1.1
+- Document page controls and chat behavior
 ## [0.1.1] - 2026-10-08
 
 ### 🚀 Features
@@ -13,13 +25,13 @@
 
 ### 🚜 Refactor
 
-- _(styles)_ Move index.css into styles folder
+- *(styles)* Move index.css into styles folder
 - Add formatter, linter and Husky to project.
-- _(types)_ Extract types into types folder
-- _(shared)_ Centralize constants, types, and time utilities
-- _(content)_ Move content script and overlay into content module
-- _(popup)_ Modularize popup into components, service, and Lit decorators
-- _(background)_ Decompose background worker and adopt HandlerContext
+- *(types)* Extract types into types folder
+- *(shared)* Centralize constants, types, and time utilities
+- *(content)* Move content script and overlay into content module
+- *(popup)* Modularize popup into components, service, and Lit decorators
+- *(background)* Decompose background worker and adopt HandlerContext
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -29,7 +41,6 @@
 ### 💼 Other
 
 - Add chrome types to dependencies and tsconfig
-
 ## [0.1.0] - 2026-10-08
 
 ### 🚀 Features
