@@ -92,5 +92,10 @@ export function extractSettingsFromForm(form: HTMLFormElement, currentSettings: 
     settings.custom.platformMinutes[platform] = number(`minutes-${platform}`);
   }
 
+  for (const page of ["watch", "shorts"] as const) settings.pages.youtube[page] = data.has(`page-youtube-${page}`);
+  for (const platform of ["instagram", "facebook"] as const) {
+    for (const page of ["feed", "reels"] as const) settings.pages[platform][page] = data.has(`page-${platform}-${page}`);
+  }
+
   return settings;
 }

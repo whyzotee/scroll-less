@@ -1,5 +1,5 @@
 import { LIMITS } from "../shared/constants";
-import { classifyUrl, parseSettings } from "../shared/core";
+import { classifyPage, isPageEnabled, parseSettings } from "../shared/core";
 import type { HandlerContext, HeartbeatMessage, SaveSettingsMessage, Sender, Snapshot, SnapshotMessage } from "../shared/types";
 import { saveSettingsAndState, saveState } from "./storage";
 import { createSnapshot, creditWatchTime, evaluateHeartbeat, logTrackingDebug, recordPopupHeartbeat } from "./tracker";
@@ -10,8 +10,10 @@ export async function handleSnapshot(message: SnapshotMessage, ctx: HandlerConte
   if (message.viewing && Number.isInteger(message.viewing.tabId) && Number.isInteger(message.viewing.windowId)) {
     try {
       const tab = await chrome.tabs.get(message.viewing.tabId);
-      const platform = classifyUrl(tab.url || message.viewing.url);
-      if (tab.active && tab.windowId === message.viewing.windowId && platform && settings.enabled[platform]) {
+      const page = classifyPage(tab.url || message.viewing.url);
+      const chatting = page?.platform === "facebook" && state.lastCheck?.reason === "chatting" && now - state.lastCheck.at < 5_000;
+      if (tab.active && tab.windowId === message.viewing.windowId && page && isPageEnabled(settings, page) && !chatting) {
+        const platform = page.platform;
         recordPopupHeartbeat(tab.id!, tab.windowId, now);
         const access = creditWatchTime(ctx, tab.id!, platform);
         state.lastCheck = {
@@ -79,5 +81,6 @@ export async function handleHeartbeat(message: HeartbeatMessage, sender: Sender,
 
   state.lastCheck = { platform: evaluation.platform, at: now, reason };
   await saveState(state);
-  return createSnapshot(settings, state, now, evaluation.platform);
+  const accessPlatform = reason === "disabled" || reason === "chatting" ? null : evaluation.platform;
+  return createSnapshot(settings, state, now, accessPlatform);
 }

@@ -58,11 +58,11 @@ test("TikTok time decreases while the extension popup is open and the page is hi
     await import("../dist/background.js");
     onInstalled({ reason: "update" });
     await new Promise(setImmediate);
-    assert.deepEqual(injected.map(({ target }) => target.tabId).sort(), [7, 8]);
+    assert.deepEqual(injected.map(({ target }) => target.tabId).sort(), [7, 8, 9]);
     assert.ok(injected.every(({ files }) => files.length === 1 && files[0] === "content.js"));
     onStartup();
     await new Promise(setImmediate);
-    assert.equal(injected.length, 4);
+    assert.equal(injected.length, 6);
     const send = (message, sender = {}) => new Promise((resolve) => listener(message, sender, resolve));
     const viewing = { tabId: 7, windowId: 2, url: "https://www.tiktok.com/th-TH/" };
     await send({ type: "snapshot", viewing });
@@ -87,6 +87,30 @@ test("TikTok time decreases while the extension popup is open and the page is hi
     );
     assert.equal(reply.result.state.lastCheck.reason, "page-hidden");
     assert.equal(reply.result.state.totalMs, 2_000);
+
+    reply = await send(
+      { type: "heartbeat", url: "https://www.facebook.com/", visible: true, pageFocused: true, chatActive: true },
+      { tab: { id: 7, windowId: 2, active: true } },
+    );
+    assert.equal(reply.result.state.lastCheck.reason, "chatting");
+    assert.equal(reply.result.state.active, null);
+    assert.equal(reply.result.access, null);
+
+    const settings = reply.result.settings;
+    settings.pages.facebook.feed = false;
+    await send({ type: "save-settings", settings });
+    values.state.totalMs = settings.normal.totalMinutes * 60_000;
+    reply = await send(
+      { type: "heartbeat", url: "https://www.facebook.com/", visible: true, pageFocused: true, chatActive: false },
+      { tab: { id: 7, windowId: 2, active: true } },
+    );
+    assert.equal(reply.result.state.lastCheck.reason, "disabled");
+    assert.equal(reply.result.access, null);
+    reply = await send(
+      { type: "heartbeat", url: "https://www.facebook.com/reel/123", visible: true, pageFocused: true, chatActive: false },
+      { tab: { id: 7, windowId: 2, active: true } },
+    );
+    assert.equal(reply.result.access.blocked, true);
   } finally {
     Date.now = originalNow;
     console.info = originalInfo;

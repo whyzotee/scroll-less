@@ -1,5 +1,5 @@
 import { TRACKING } from "../shared/constants";
-import { accessFor, classifyUrl, consume } from "../shared/core";
+import { accessFor, classifyPage, consume, isPageEnabled } from "../shared/core";
 import type {
   Access,
   CheckReason,
@@ -58,7 +58,8 @@ export function creditWatchTime(ctx: HandlerContext, tabId: number, platform: Pl
 
 export async function evaluateHeartbeat(message: HeartbeatMessage, sender: Sender, ctx: HandlerContext): Promise<HeartbeatEvaluation> {
   const { settings, now } = ctx;
-  const platform = classifyUrl(message.url);
+  const page = classifyPage(message.url);
+  const platform = page?.platform ?? null;
   const tab = sender.tab;
   const popupFocused = isPopupActive(tab?.id, tab?.windowId, now);
 
@@ -72,7 +73,7 @@ export async function evaluateHeartbeat(message: HeartbeatMessage, sender: Sende
     };
   }
 
-  if (!settings.enabled[platform]) {
+  if (page && !isPageEnabled(settings, page)) {
     return {
       platform,
       canCount: false,
@@ -80,6 +81,10 @@ export async function evaluateHeartbeat(message: HeartbeatMessage, sender: Sende
       popupFocused,
       reason: "disabled",
     };
+  }
+
+  if (platform === "facebook" && message.chatActive === true) {
+    return { platform, canCount: false, windowFocused: false, popupFocused, reason: "chatting" };
   }
 
   if (!tab?.active) {
@@ -131,6 +136,7 @@ export function logTrackingDebug(
       platform: evaluation.platform,
       pageVisible: message.visible,
       pageFocused: message.pageFocused,
+      chatActive: message.chatActive === true,
       tabActive: sender.tab?.active ?? false,
       windowFocused: evaluation.windowFocused,
       popupFocused: evaluation.popupFocused,

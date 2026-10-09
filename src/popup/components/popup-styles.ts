@@ -277,6 +277,40 @@ export const popupStyles = css`
     font-variant-numeric: tabular-nums;
   }
 
+  .page-options {
+    display: flex;
+    gap: 8px;
+    margin-top: 11px;
+    padding-top: 10px;
+    border-top: 1px solid #e9eef6;
+  }
+
+  .page-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border: 1px solid #dce5f2;
+    border-radius: 8px;
+    color: #66768d;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .page-option:has(input:checked) {
+    border-color: #8ea6f2;
+    background: #eef2ff;
+    color: #284aba;
+  }
+
+  .page-option input {
+    width: 13px;
+    height: 13px;
+    margin: 0;
+    accent-color: #5677e8;
+  }
+
   .switch {
     position: relative;
     display: inline-flex;

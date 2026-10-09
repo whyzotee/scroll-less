@@ -1,14 +1,25 @@
-import type { Access, AccessReason, ActiveSession, CheckReason, LastCheck, Mode, Platform, Settings, UsageState } from "./types/index.ts";
+import type {
+  Access,
+  AccessReason,
+  ActiveSession,
+  CheckReason,
+  ClassifiedPage,
+  LastCheck,
+  Mode,
+  Platform,
+  Settings,
+  UsageState,
+} from "./types/index.ts";
 
 import { LIMITS, TIME_MS } from "./constants.ts";
 
 export const PLATFORMS = ["youtube", "instagram", "tiktok", "facebook"] as const;
 
 export const PLATFORM_NAMES: Record<Platform, string> = {
-  youtube: "YouTube Shorts",
-  instagram: "Instagram Reels",
+  youtube: "YouTube",
+  instagram: "Instagram",
   tiktok: "TikTok",
-  facebook: "Facebook Reels",
+  facebook: "Facebook",
 };
 
 export type { Access, AccessReason, ActiveSession, CheckReason, LastCheck, Mode, Platform, Settings, UsageState };
@@ -23,6 +34,11 @@ export function defaultSettings(): Settings {
       instagram: true,
       tiktok: true,
       facebook: true,
+    },
+    pages: {
+      youtube: { watch: false, shorts: true },
+      instagram: { feed: true, reels: true },
+      facebook: { feed: true, reels: true },
     },
     normal: {
       totalMinutes: 60,
@@ -82,7 +98,7 @@ export function advanceClock(state: UsageState, now: number): UsageState {
   return next;
 }
 
-export function classifyUrl(rawUrl: string): Platform | null {
+export function classifyPage(rawUrl: string): ClassifiedPage | null {
   let url: URL;
 
   try {
@@ -91,22 +107,40 @@ export function classifyUrl(rawUrl: string): Platform | null {
     return null;
   }
 
-  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  if (url.protocol !== "https:") return null;
 
   const host = url.hostname.toLowerCase();
   const path = url.pathname.toLowerCase();
 
   if (/^(www\.|m\.)?youtube\.com$/.test(host) && /^\/shorts(\/|$)/.test(path)) {
-    return "youtube";
+    return { platform: "youtube", kind: "shorts" };
   }
-  if (/^(www\.)?instagram\.com$/.test(host) && /^\/reels?(\/|$)/.test(path)) {
-    return "instagram";
+  if (/^(www\.|m\.)?youtube\.com$/.test(host) && path === "/watch" && url.searchParams.has("v")) {
+    return { platform: "youtube", kind: "watch" };
   }
-  if (/^(www\.|m\.)?facebook\.com$/.test(host) && /^\/reels?(\/|$)/.test(path)) {
-    return "facebook";
+  if (/^(www\.)?instagram\.com$/.test(host)) {
+    if (/^\/reels?(\/|$)/.test(path)) return { platform: "instagram", kind: "reels" };
+    if (path === "/" || /^\/(explore|p)(\/|$)/.test(path)) return { platform: "instagram", kind: "feed" };
   }
-  if (/^(www\.|m\.)?tiktok\.com$/.test(host)) return "tiktok";
+  if (/^(www\.|m\.)?facebook\.com$/.test(host)) {
+    if (/^\/reels?(\/|$)/.test(path)) return { platform: "facebook", kind: "reels" };
+    if (path === "/" || path === "/home.php" || /^\/feed(\/|$)/.test(path)) {
+      return { platform: "facebook", kind: "feed" };
+    }
+  }
+  if (/^(www\.|m\.)?tiktok\.com$/.test(host)) return { platform: "tiktok", kind: "site" };
   return null;
+}
+
+export function classifyUrl(rawUrl: string): Platform | null {
+  return classifyPage(rawUrl)?.platform ?? null;
+}
+
+export function isPageEnabled(settings: Settings, page: ClassifiedPage): boolean {
+  if (!settings.enabled[page.platform]) return false;
+  if (page.platform === "tiktok") return true;
+  if (page.platform === "youtube") return settings.pages.youtube[page.kind as "watch" | "shorts"];
+  return settings.pages[page.platform][page.kind as "feed" | "reels"];
 }
 
 export function accessFor(state: UsageState, settings: Settings, platform: Platform, now: number): Access {
@@ -193,6 +227,27 @@ export function parseSettings(value: unknown): Settings | null {
     if (typeof item.enabled[platform] !== "boolean") return null;
   }
 
+  const defaults = defaultSettings().pages;
+  const storedPages = item.pages;
+  // Existing installs only tracked Reels and Shorts. Preserve that scope until
+  // the user explicitly saves new page choices.
+  const legacyFeed = storedPages === undefined ? false : defaults.instagram.feed;
+  const pages: Settings["pages"] = {
+    youtube: {
+      watch: storedPages?.youtube?.watch ?? defaults.youtube.watch,
+      shorts: storedPages?.youtube?.shorts ?? defaults.youtube.shorts,
+    },
+    instagram: {
+      feed: storedPages?.instagram?.feed ?? legacyFeed,
+      reels: storedPages?.instagram?.reels ?? defaults.instagram.reels,
+    },
+    facebook: {
+      feed: storedPages?.facebook?.feed ?? legacyFeed,
+      reels: storedPages?.facebook?.reels ?? defaults.facebook.reels,
+    },
+  };
+  if (Object.values(pages).some((group) => Object.values(group).some((value) => typeof value !== "boolean"))) return null;
+
   const legacyPlatformMinutes = (item.normal as Settings["normal"] & { platformMinutes?: Record<Platform, number> }).platformMinutes;
 
   const savedPlatformMinutes = item.custom?.platformMinutes ?? legacyPlatformMinutes;
@@ -205,6 +260,7 @@ export function parseSettings(value: unknown): Settings | null {
   return {
     mode: item.mode,
     enabled: Object.fromEntries(PLATFORMS.map((platform) => [platform, item.enabled![platform]])) as Record<Platform, boolean>,
+    pages,
     normal: { totalMinutes: item.normal.totalMinutes! },
     cooldown: {
       watchMinutes: item.cooldown.watchMinutes!,

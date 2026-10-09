@@ -30,6 +30,7 @@ export interface HeartbeatMessage {
   url: string;
   visible: boolean;
   pageFocused: boolean;
+  chatActive?: boolean;
 }
 
 export interface LeaveMessage {

@@ -3,17 +3,19 @@ import test from "node:test";
 import {
   accessFor,
   advanceClock,
+  classifyPage,
   classifyUrl,
   consume,
   defaultSettings,
   freshState,
+  isPageEnabled,
   nextLocalMidnight,
   parseSettings,
 } from "../src/shared/core.ts";
 
 const minute = 60_000;
 
-test("recognizes short-video pages without limiting unrelated pages", () => {
+test("classifies selectable social pages without limiting unrelated pages", () => {
   assert.equal(classifyUrl("https://www.youtube.com/shorts/abc"), "youtube");
   assert.equal(classifyUrl("https://www.youtube.com/shorts"), "youtube");
   assert.equal(classifyUrl("https://www.instagram.com/reels/"), "instagram");
@@ -25,10 +27,32 @@ test("recognizes short-video pages without limiting unrelated pages", () => {
   assert.equal(classifyUrl("https://www.tiktok.com/@person"), "tiktok");
   assert.equal(classifyUrl("https://www.tiktok.com/search?q=music"), "tiktok");
   assert.equal(classifyUrl("https://www.tiktok.com/@person/video/123456"), "tiktok");
-  assert.equal(classifyUrl("https://www.youtube.com/watch?v=abc"), null);
-  assert.equal(classifyUrl("https://www.instagram.com/p/abc/"), null);
+  assert.deepEqual(classifyPage("https://www.youtube.com/watch?v=abc"), { platform: "youtube", kind: "watch" });
+  assert.deepEqual(classifyPage("https://www.instagram.com/p/abc/"), { platform: "instagram", kind: "feed" });
+  assert.deepEqual(classifyPage("https://www.instagram.com/explore/"), { platform: "instagram", kind: "feed" });
+  assert.deepEqual(classifyPage("https://www.facebook.com/feed/"), { platform: "facebook", kind: "feed" });
+  assert.equal(classifyUrl("https://www.facebook.com/messages/"), null);
+  assert.equal(classifyUrl("https://www.instagram.com/direct/inbox/"), null);
+  assert.equal(classifyUrl("https://www.youtube.com/"), null);
+  assert.equal(classifyUrl("https://www.youtube.com/watch"), null);
   assert.equal(classifyUrl("https://business.tiktok.com/"), null);
   assert.equal(classifyUrl("https://www.youtube.com.evil.test/shorts/abc"), null);
+  assert.equal(classifyUrl("http://www.youtube.com/shorts/abc"), null);
+});
+
+test("page choices are independent and saved settings retain them", () => {
+  const settings = defaultSettings();
+  assert.equal(isPageEnabled(settings, classifyPage("https://www.youtube.com/watch?v=abc")), false);
+  assert.equal(isPageEnabled(settings, classifyPage("https://www.youtube.com/shorts/abc")), true);
+  settings.pages.youtube.watch = true;
+  settings.pages.instagram.feed = false;
+  assert.equal(isPageEnabled(settings, classifyPage("https://www.youtube.com/watch?v=abc")), true);
+  assert.equal(isPageEnabled(settings, classifyPage("https://www.instagram.com/")), false);
+  assert.equal(isPageEnabled(settings, classifyPage("https://www.instagram.com/reel/abc/")), true);
+  assert.deepEqual(parseSettings(settings)?.pages, settings.pages);
+  assert.equal(parseSettings({ ...settings, pages: undefined })?.pages.youtube.watch, false);
+  assert.equal(parseSettings({ ...settings, pages: undefined })?.pages.facebook.feed, false);
+  assert.equal(parseSettings({ ...settings, pages: undefined })?.pages.instagram.reels, true);
 });
 
 test("normal mode shares one daily limit across enabled platforms", () => {

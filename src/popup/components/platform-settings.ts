@@ -8,6 +8,18 @@ function renderPlatform(platform: Platform, mode: Mode, settings: Settings, stat
   const remaining = Math.max(0, settings.custom.platformMinutes[platform] * TIME_MS.MINUTE - state.platformMs[platform]);
   const description =
     mode === "normal" ? "Shares the daily limit" : mode === "custom" ? `${clock(remaining)} left` : "Shares the watch and break cycle";
+  const pageOptions =
+    platform === "youtube"
+      ? ([
+          { key: "watch", label: "Videos" },
+          { key: "shorts", label: "Shorts" },
+        ] as const)
+      : platform === "tiktok"
+        ? []
+        : ([
+            { key: "feed", label: "Feed" },
+            { key: "reels", label: "Reels" },
+          ] as const);
 
   return html`
     <div class="platform-card">
@@ -29,6 +41,24 @@ function renderPlatform(platform: Platform, mode: Mode, settings: Settings, stat
           <span class="track"></span>
         </label>
       </div>
+      ${
+        pageOptions.length
+          ? html`<div class="page-options" aria-label=${`${PLATFORM_NAMES[platform]} pages`}>
+            ${pageOptions.map(
+              ({ key, label }) => html`
+                <label class="page-option">
+                  <input
+                    type="checkbox"
+                    name=${`page-${platform}-${key}`}
+                    ?checked=${platform === "youtube" ? settings.pages.youtube[key as "watch" | "shorts"] : settings.pages[platform as "instagram" | "facebook"][key as "feed" | "reels"]}
+                  />
+                  <span>${label}</span>
+                </label>
+              `,
+            )}
+          </div>`
+          : ""
+      }
       <div class="platform-limit" ?hidden=${mode !== "custom"}>
         <span>Daily limit</span>
         <label class="number-wrap">
@@ -52,7 +82,7 @@ export function renderPlatformSettings(mode: Mode, settings: Settings, state: Us
     <div class="card">
       <div class="section-head">
         <h2>Platforms</h2>
-        <span class="hint">Choose sites to limit</span>
+        <span class="hint">Choose pages to limit</span>
       </div>
       <div class="platform-list">${PLATFORMS.map((platform) => renderPlatform(platform, mode, settings, state))}</div>
     </div>
