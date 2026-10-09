@@ -49,3 +49,66 @@ test("content script starts once per live extension context and restarts after r
   assert.equal(intervals.length, 2);
   assert.equal(listeners.size, 1);
 });
+
+test("Facebook chat activity pauses heartbeats and feed scrolling resumes them", async () => {
+  const script = readFileSync("dist/content.js", "utf8");
+  const listeners = new Map();
+  const intervals = [];
+  const heartbeats = [];
+
+  class FakeElement {
+    constructor(pane = null) {
+      this.pane = pane;
+      this.isConnected = true;
+    }
+    closest() {
+      return this.pane;
+    }
+    getAttribute(name) {
+      return name === "aria-label" ? "Chat with a friend" : null;
+    }
+  }
+
+  const chatPane = new FakeElement();
+  const chatTarget = new FakeElement(chatPane);
+  const feedTarget = new FakeElement();
+  const scope = {
+    URL,
+    Element: FakeElement,
+    chrome: {
+      runtime: {
+        onMessage: { addListener() {}, hasListener: () => false },
+        sendMessage: async (message) => {
+          if (message.type === "heartbeat") heartbeats.push(message);
+          return { ok: true, result: { access: null } };
+        },
+      },
+    },
+    console: { info() {}, warn() {} },
+    document: {
+      activeElement: null,
+      addEventListener: (type, listener) => listeners.set(type, listener),
+      getElementById: () => null,
+      body: { inert: false },
+      visibilityState: "visible",
+      hasFocus: () => true,
+    },
+    location: { href: "https://www.facebook.com/" },
+    setInterval: (callback) => intervals.push(callback),
+    window: { addEventListener() {} },
+  };
+
+  runInNewContext(script, scope);
+  await new Promise(setImmediate);
+  assert.equal(heartbeats.at(-1).chatActive, false);
+
+  listeners.get("pointerdown")({ composedPath: () => [chatTarget] });
+  intervals[0]();
+  await new Promise(setImmediate);
+  assert.equal(heartbeats.at(-1).chatActive, true);
+
+  listeners.get("wheel")({ composedPath: () => [feedTarget] });
+  intervals[0]();
+  await new Promise(setImmediate);
+  assert.equal(heartbeats.at(-1).chatActive, false);
+});

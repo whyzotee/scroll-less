@@ -1,9 +1,10 @@
 import { EXTENSION, TRACKING } from "../shared/constants";
 import { classifyUrl } from "../shared/core";
-import type { Access, MessageReply, PingListener } from "../shared/types";
+import type { MessageReply, PingListener, Snapshot } from "../shared/types";
 import { LimitOverlay } from "./components/limit-overlay";
+import { FacebookChatActivity } from "./facebook-chat";
 
-type Reply = MessageReply<{ access: Access | null }>;
+type Reply = MessageReply<Snapshot>;
 
 interface ScrollLessGlobalScope {
   __scrolllessPingListener?: PingListener;
@@ -13,11 +14,10 @@ const contentScope = globalThis as typeof globalThis & ScrollLessGlobalScope;
 
 function initContentScript(): void {
   const priorListener = contentScope.__scrolllessPingListener;
-  if (priorListener && chrome.runtime.onMessage.hasListener(priorListener)) {
-    return;
-  }
+  if (priorListener && chrome.runtime.onMessage.hasListener(priorListener)) return;
 
   const overlay = new LimitOverlay();
+  const facebookChat = new FacebookChatActivity();
   let lastUrl = "";
   let inFlight = false;
   let wasVisible = false;
@@ -51,6 +51,7 @@ function initContentScript(): void {
     }
 
     lastUrl = url;
+    const chatActive = platform === "facebook" && facebookChat.isActive;
     const visible = document.visibilityState === "visible";
     if (!visible && !wasVisible) return;
     wasVisible = visible;
@@ -62,16 +63,17 @@ function initContentScript(): void {
         url,
         visible,
         pageFocused: document.hasFocus(),
+        chatActive,
       });
 
-      const reason = reply.result?.access?.reason ?? (reply.ok ? "allowed" : "error");
+      const reason = reply.result?.state?.lastCheck?.reason ?? (reply.ok ? "allowed" : "error");
 
       if (reason !== previousReason) {
         console.info("[ScrollLess content] status", { url, visible, reason, reply });
         previousReason = reason;
       }
 
-      if (reply.ok && reply.result?.access?.blocked) {
+      if (reply.ok && reply.result?.access?.blocked && !chatActive) {
         overlay.show(reply.result.access, platform);
       } else {
         overlay.clear();
@@ -90,9 +92,7 @@ function initContentScript(): void {
   window.addEventListener("popstate", () => void tick());
 
   const pingListener: PingListener = (incoming, _sender, sendResponse) => {
-    if (incoming.type === EXTENSION.PING_MESSAGE_TYPE) {
-      sendResponse({ ok: true });
-    }
+    if (incoming.type === EXTENSION.PING_MESSAGE_TYPE) sendResponse({ ok: true });
   };
 
   chrome.runtime.onMessage.addListener(pingListener);

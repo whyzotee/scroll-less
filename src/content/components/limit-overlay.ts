@@ -7,6 +7,7 @@ export class LimitOverlay {
   private overlay: HTMLElement | null = null;
   private message: HTMLElement | null = null;
   private countdown: HTMLElement | null = null;
+  private messagesLink: HTMLAnchorElement | null = null;
   private previousBody: HTMLElement | null = null;
   private previousInert = false;
   private gifFilesPromise: Promise<string[]> | null = null;
@@ -30,6 +31,7 @@ export class LimitOverlay {
     this.overlay = null;
     this.message = null;
     this.countdown = null;
+    this.messagesLink = null;
     if (this.previousBody) {
       this.previousBody.inert = this.previousInert;
     }
@@ -52,6 +54,7 @@ export class LimitOverlay {
     if (this.countdown) {
       this.countdown.textContent = access.availableAt ? clock(Math.max(0, access.availableAt - Date.now())) : "";
     }
+    if (this.messagesLink) this.messagesLink.hidden = platform !== "facebook";
   }
 
   private gifFiles(): Promise<string[]> {
@@ -209,6 +212,19 @@ export class LimitOverlay {
         letter-spacing: -.04em;
         font-variant-numeric: tabular-nums;
       }
+      .messages-link {
+        display: block;
+        margin-top: 14px;
+        padding: 10px 12px;
+        border: 1px solid #d6dfec;
+        border-radius: 9px;
+        color: #284aba;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+      }
+      .messages-link[hidden] { display: none; }
     `;
 
     const card = document.createElement("div");
@@ -253,7 +269,13 @@ export class LimitOverlay {
     this.countdown = document.createElement("strong");
     timer.append(timerLabel, this.countdown);
 
-    card.append(brand, heading, gif, this.message, timer);
+    this.messagesLink = document.createElement("a");
+    this.messagesLink.className = "messages-link";
+    this.messagesLink.href = "https://www.facebook.com/messages/";
+    this.messagesLink.textContent = "Open Facebook Messages";
+    this.messagesLink.hidden = true;
+
+    card.append(brand, heading, gif, this.message, timer, this.messagesLink);
     root.append(style, card);
     document.documentElement.append(this.overlay);
 

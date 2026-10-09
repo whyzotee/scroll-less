@@ -22,7 +22,9 @@ function trackingText(state: UsageState, now: number): string {
     case "window-unfocused":
       return "Paused: the browser is not in front";
     case "disabled":
-      return `${name} is not limited`;
+      return `${name} is not limited on this page`;
+    case "chatting":
+      return "Paused: chatting on Facebook";
     case "limit-reached":
       return "Time limit reached";
     default:
